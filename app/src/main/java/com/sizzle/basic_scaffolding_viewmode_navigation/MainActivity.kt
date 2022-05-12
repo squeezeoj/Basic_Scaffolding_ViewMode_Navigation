@@ -50,6 +50,9 @@ class MainViewModel : ViewModel() {
     //------------------------------------------------------
     val itemList = mutableStateListOf<Int>()
 
+    val filtering = mutableStateOf<Boolean>(false)
+    val itemListFiltered = mutableStateListOf<Int>()
+
     fun addItem(item: Int) {
         itemList.add(item)
         println("**** addItem($item)")
@@ -58,6 +61,14 @@ class MainViewModel : ViewModel() {
     fun clearItemList() {
         itemList.clear()
         println("**** clearItemList()")
+    }
+
+    fun filterListGreaterThan(greaterThan: Int) {
+        itemListFiltered.clear()
+        itemList.forEach { item ->
+            if (item > greaterThan) itemListFiltered.add(item)
+        }
+        println("**** filterListGreaterThan($greaterThan)")
     }
 
     //------------------------------------------------------
