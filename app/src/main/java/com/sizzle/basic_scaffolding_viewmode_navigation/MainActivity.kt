@@ -76,6 +76,7 @@ class MainViewModel : ViewModel() {
     //------------------------------------------------------
     init {
         clearItemList()
+        filtering.value = false
     }   // End Initializer
 
 }

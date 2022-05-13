@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.runtime.*
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.sizzle.basic_scaffolding_viewmode_navigation.*
+import com.sizzle.basic_scaffolding_viewmode_navigation.utilities.isNumber
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.reflect.KProperty0
@@ -37,6 +39,7 @@ import kotlin.reflect.KProperty0
 //----------------------------------------------------------------------
 @Composable
 fun HomeScreen(
+    navController: NavHostController,
     model: MainViewModel
 ) {
 
@@ -49,6 +52,7 @@ fun HomeScreen(
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
             FloatingActionButton(
+                model = model,
                 onAddItem = model::addItem              // Pass View Model Function
             ) },
         drawerContent = {
@@ -59,8 +63,8 @@ fun HomeScreen(
         drawerGesturesEnabled = true,
         content = {
             Content(
-                itemList = model.itemList,              // Pass Item List
-                onAddItem = model::addItem              // Pass View Model Function
+                model = model,
+                onAddItem = model::addItem,                  // Pass View Model Function
             ) },
         bottomBar = { BottomBar() }
     )
@@ -73,9 +77,8 @@ fun HomeScreen(
 //----------------------------------------------------------------------
 @Composable
 fun Content(
-    itemList: List<Int>,
-//    itemList: KProperty0<SnapshotStateList<Int>>,
-    onAddItem: (Int) -> Unit
+    model: MainViewModel,
+    onAddItem: (Int) -> Unit,
 ) {
 
     val focusManager = LocalFocusManager.current
@@ -87,8 +90,10 @@ fun Content(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
+            // Add Item to List Button ----------------------
             Button(
-                onClick = { onAddItem((1..99).random()) },
+                onClick = { model.addItem((1..99).random()) },
+//                onClick = { onAddItem((1..99).random()) },
                 modifier = Modifier.height(60.dp)
             ) {
                 Text(text = "Add Item")
@@ -96,7 +101,8 @@ fun Content(
 
             Spacer(modifier = Modifier.width(5.dp))
 
-            var text by remember { mutableStateOf("0") }
+            // Filter Field ----------------------------------
+            var text by remember { mutableStateOf("") }
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
@@ -118,9 +124,13 @@ fun Content(
 
             Spacer(modifier = Modifier.width(5.dp))
 
+            // Filter Button ------------------------------------
             Button(
                 onClick = {
-
+                    if (isNumber(text)) {
+                        model.filtering.value = true
+                        model.filterListGreaterThan(text.toInt())
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color.LightGray,
@@ -137,14 +147,33 @@ fun Content(
                 )
             }
 
-
-
+            // Clear Button --------------------------------------
+            Button(
+                onClick = {
+                    model.filtering.value = false
+                    text = ""
+                },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color.LightGray,
+                    contentColor = Color.White),
+                modifier = Modifier
+                    .height(64.dp)
+                    .padding(top = 8.dp)
+            )
+            {
+                Icon(
+                    imageVector = Icons.Rounded.Clear,
+                    tint = MaterialTheme.colors.onBackground,
+                    contentDescription = "Clear Search"
+                )
+            }
 
         }
 
         Divider()
 
-        ShowList(itemList = itemList)
+        // Show List ----------------------------------------
+        ShowList(if (!model.filtering.value) model.itemList else model.itemListFiltered)
 
     }
 }
@@ -223,6 +252,7 @@ fun DrawerContent(
 //----------------------------------------------------------------------
 @Composable
 fun FloatingActionButton(
+    model: MainViewModel,
     onAddItem: (Int) -> Unit
 ) {
     FloatingActionButton(
@@ -231,7 +261,8 @@ fun FloatingActionButton(
         },
     ){
         IconButton(onClick = {
-            onAddItem((1..99).random())
+            model.addItem((1..99).random())
+//            onAddItem((1..99).random())
         }) {
             Icon(
                 imageVector = Icons.Default.Add,
